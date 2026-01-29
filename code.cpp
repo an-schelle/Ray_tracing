@@ -137,7 +137,7 @@ Ray::Ray(const Point4& o, const Vector4& d)
 //Texture_Material::Texture_Material()
    // : kd(0.0f), ks(0.0f) {}
 
-Texture_Material Texture_Material::Texturevirtu(const Point4& p) {
+Texture_Material Texture_Material::Texturevirtu(const Point4& /*p*/) {
     return *this; // ou: return Texture_Material{};
 }
 
@@ -148,7 +148,7 @@ Uniform_texture::Uniform_texture(const Color& d, const Color& s)
     ks = s;
 }
 
-Texture_Material Uniform_texture::Texturevirtu(const Point4& p) {
+Texture_Material Uniform_texture::Texturevirtu(const Point4& /*p*/) {
     return *this;
 }
 
@@ -220,13 +220,10 @@ Vector4 Sphere::normal(const Point4& p) const{
     return norm;
 }
 
-Texture_Material Sphere::TextureAt(const Point4& p) const{
+Texture_Material Sphere::TextureAt(const Point4& /*p*/) const{
     Color red(255, 0, 0);
     Uniform_texture Uni(red, red);
     return Uni;
 }   
 
 }
-
-
-

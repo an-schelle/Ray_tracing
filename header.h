@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <memory> // Ajouté pour unique_ptr
 
 namespace classes {
 
@@ -80,6 +81,7 @@ class Texture_Material{
     public:
     Color kd;
     Color ks;// coeff séculaire
+    virtual ~Texture_Material() = default; // Ajouté pour la hiérarchie
     virtual Texture_Material Texturevirtu(const Point4& p);
 };
 
@@ -88,7 +90,7 @@ class Uniform_texture : public Texture_Material{
     Color kd;
     Color ks;// coeff séculaire
     Uniform_texture(const Color& d, const Color& s);//constructeur
-    Texture_Material Texturevirtu(const Point4& p);// ici va juste renvoyer la texture elle même
+    Texture_Material Texturevirtu(const Point4& p) override;// ici va juste renvoyer la texture elle même
 };
 
 class Light {
@@ -140,7 +142,7 @@ public:
     
     virtual Vector4 normal(const Point4& p) const = 0; //normale en un point
 
-    // Couleur / matériau au point p (simplifié)
+    // Couleur/ matériau au point p (simplifié)
     virtual Texture_Material TextureAt(const Point4& p) const = 0;
 };
 
@@ -151,8 +153,8 @@ class Sphere : public Object{
         Sphere(Point4 c,float r);
 
         Point4 intersect(const Ray& ray) const override;
-        Vector4 normal(const Point4& p) const;
-        Texture_Material TextureAt(const Point4& p) const;
+        Vector4 normal(const Point4& p) const override;
+        Texture_Material TextureAt(const Point4& p) const override;
 
 
 };
