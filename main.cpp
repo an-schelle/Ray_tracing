@@ -34,7 +34,7 @@ bool trace(const Ray& ray, const std::vector<SceneObject>& scene, float& tNear, 
     return (hitIndex != -1);
 }
 
-Color castRay(const Ray& ray, const std::vector<SceneObject>& scene, const Point4& lightPos, int depth) {
+Color castRay(const Ray& ray, const std::vector<SceneObject>& scene, const std::vector<Point4>& lights, int depth) {
     float tNear; int hitIdx; Point4 hitP;
     if (depth > 2 || !trace(ray, scene, tNear, hitIdx, hitP)) { // Limite de 2 rebonds pour les reflets (sinon lag)
         return getSkyColor(ray.direction);
@@ -44,16 +44,22 @@ Color castRay(const Ray& ray, const std::vector<SceneObject>& scene, const Point
     Vector4 N = obj.s.normal(hitP);
     float magN = std::sqrt(N.dot3(N)); Vector4 nUnit = N * (1.f/magN); // Normalisation de la normale
 
-    Vector4 L = lightPos - hitP;
-    float distToLight = std::sqrt(L.dot3(L));
-    Vector4 lUnit = L * (1.f/distToLight);  // Vecteur vers la lumière pour le rebonds
-    
-    Ray shadowRay(hitP + (nUnit * 0.05f), lUnit);    // Rayon d'ombre
-    float tShad; int idxShad; Point4 pShad;
-    bool inShadow = trace(shadowRay, scene, tShad, idxShad, pShad) && (tShad < distToLight);
-
+    float totalDiffuse = 0.0f;
     float ambient = 0.1f;     // Lumière de base minimum
-    float diffuse = inShadow ? 0.f : std::max(0.0f, nUnit.dot3(lUnit)); // Formule de Lambert trouvée sur internet
+
+    for (const auto& lPos : lights) {
+        Vector4 L = lPos - hitP;
+        float distToLight = std::sqrt(L.dot3(L));
+        Vector4 lUnit = L * (1.f/distToLight);  // Vecteur vers la lumière pour le rebonds
+        
+        Ray shadowRay(hitP + (nUnit * 0.05f), lUnit);    // Rayon d'ombre
+        float tShad; int idxShad; Point4 pShad;
+        bool inShadow = trace(shadowRay, scene, tShad, idxShad, pShad) && (tShad < distToLight);
+
+        totalDiffuse += inShadow ? 0.f : std::max(0.0f, nUnit.dot3(lUnit)); // Formule de Lambert trouvée sur internet
+    }
+    
+    float diffuse = totalDiffuse / lights.size(); 
     
     float r = obj.col.r * (diffuse + ambient);
     float g = obj.col.g * (diffuse + ambient);
@@ -64,7 +70,7 @@ Color castRay(const Ray& ray, const std::vector<SceneObject>& scene, const Point
         float magI = std::sqrt(I.dot3(I)); Vector4 iUnit = I * (1.f/magI);
         Vector4 R = iUnit - nUnit * (2.f * iUnit.dot3(nUnit)); // Formule de réflexion
         Ray reflectRay(hitP + (nUnit * 0.05f), R);
-        Color reflectCol = castRay(reflectRay, scene, lightPos, depth + 1);// Appel récursif
+        Color reflectCol = castRay(reflectRay, scene, lights, depth + 1);// Appel récursic
         r += reflectCol.r * obj.reflect;
         g += reflectCol.g * obj.reflect;
         b += reflectCol.b * obj.reflect;
@@ -78,7 +84,12 @@ int main() {
     const int height = 720;    // Résolution 720p (hauteur)
 
     Point4 camPos(0.f, 3.0f, -6.f);  // Caméra placée en hauteur (y=3.0)
-    Point4 lightPos(-17.f, 28.f, -16.f); // Source lumineuse excentrée
+    
+    // 3 sources lumineuses très proches
+    std::vector<Point4> lights;
+    lights.push_back(Point4(-17.f, 28.f, -16.f)); // Source lumineuse excentrée
+    lights.push_back(Point4(-16.5f, 28.2f, -15.8f));
+    lights.push_back(Point4(-17.5f, 27.8f, -16.2f));
     
     std::vector<SceneObject> scene;
     float groundRadius = 100000.0f;  // Rayon immense pour simuler un sol plat
@@ -98,7 +109,7 @@ int main() {
             float v = ((float)j / height) * 2.25f - 1.125f;  // Co verticale (ratio 16:9)
 
             Ray ray(camPos, Vector4(u, v - 0.7f, 3.0f)); // v-0.7 incline le regard vers le bas
-            Color pixelCol = castRay(ray, scene, lightPos, 0);
+            Color pixelCol = castRay(ray, scene, lights, 0);
 
             img << pixelCol.r << " " << pixelCol.g << " " << pixelCol.b << " ";
         }
