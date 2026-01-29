@@ -6,6 +6,8 @@
 
 namespace classes {
 
+
+
 struct Color {
     int r, g, b;
     Color();                              
@@ -122,15 +124,7 @@ class Camera {
 };
 
 
-class Scene {
-    public: 
-    std::vector<std::unique_ptr<Object>> objects;//unique_ptr évite les bugs
-    std::vector<std::unique_ptr<Light>>  lights;
-    Camera cam;
 
-    
-
-};
 
 
 
@@ -140,8 +134,8 @@ public:
     virtual ~Object() = default;
 
     
-    Point4 intersect(const Ray& ray) const = 0; 
-    // Renvoie le point d'intersection, s'il n'existe pas on renvoie un vecteur
+    virtual Point4 intersect(const Ray& ray) const = 0; 
+    // Renvoie le point d'intersection, s'il n'existe pas on renvoie un point avec d=0
 
     
     virtual Vector4 normal(const Point4& p) const = 0; //normale en un point
@@ -156,10 +150,19 @@ class Sphere : public Object{
         float rayon;
         Sphere(Point4 c,float r);
 
-        Point4 intersect(const Ray& ray);
-        Vector4 normal(const Point4& p);
-        Texture_Material TextureAt(const Point4& p);
+        Point4 intersect(const Ray& ray) const override;
+        Vector4 normal(const Point4& p) const;
+        Texture_Material TextureAt(const Point4& p) const;
 
+
+};
+
+class Scene {
+    public: 
+    Scene();
+    std::vector<std::unique_ptr<Object>> objects;//unique_ptr évite les bugs
+    std::vector<std::unique_ptr<Light>>  lights;
+    Camera cam;
 
 };
 

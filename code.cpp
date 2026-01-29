@@ -125,11 +125,7 @@ std::ostream& operator<<(std::ostream& os, const Image& img) {
 
 
 
-    Ray::Ray()  : origin(Point4()), direction(Vector4()) {}
-    Ray::Ray(const Point4& o, const Vector4& d)  : origin(o), direction(d) {}
-
-
-Ray::Ray() : origin(), direction() {}
+   Ray::Ray() : origin(), direction() {}
 
 Ray::Ray(const Point4& o, const Vector4& d)
     : origin(o), direction(d) {}
@@ -138,7 +134,9 @@ Ray::Ray(const Point4& o, const Vector4& d)
 //Texture_Material::Texture_Material()
    // : kd(0.0f), ks(0.0f) {}
 
-
+Texture_Material Texture_Material::Texturevirtu(const Point4& p) {
+    return *this; // ou: return Texture_Material{};
+}
 
 
 Uniform_texture::Uniform_texture(const Color& d, const Color& s)
@@ -147,10 +145,22 @@ Uniform_texture::Uniform_texture(const Color& d, const Color& s)
     ks = s;
 }
 
+Texture_Material Uniform_texture::Texturevirtu(const Point4& p) {
+    return *this;
+}
 
 
 PointLight::PointLight(const Point4& position, const Color& intensity)
     : pos(position), I(intensity) {}
+
+
+Point4 PointLight::position() const {
+    return pos;
+}
+
+Color PointLight::intensity() const {
+    return I;
+}
 
 
 Camera::Camera()
@@ -166,7 +176,7 @@ Scene::Scene()
 
 Sphere::Sphere(Point4 c,float r) : centre(c),rayon(r) {}
 
-Point4 Sphere::intersect(const Ray& ray) 
+Point4 Sphere::intersect(const Ray& ray) const
 {
     // Convention: pas d'intersection => on renvoie un "point" avec d=0
     Point4 noHit(0.f, 0.f, 0.f);
@@ -204,12 +214,12 @@ Point4 Sphere::intersect(const Ray& ray)
     //résoudre selon t : origine rayon + t*vecteur = point du cerlce (à r du centre )
 }
 
-Vector4 Sphere::normal(const Point4& p){
+Vector4 Sphere::normal(const Point4& p) const{
     Vector4 norm = p - centre;
     return norm;
 }
 
-Texture_Material Sphere::TextureAt(const Point4& p){
+Texture_Material Sphere::TextureAt(const Point4& p) const{
     Color red(255, 0, 0);
     Uniform_texture Uni(red, red);
     return Uni;
