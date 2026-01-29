@@ -47,6 +47,9 @@ float Vector4::dot3(const Vector4& other) const {// produit scalaire
     return x*other.x + y*other.y + z*other.z;
 }
 
+
+
+
 std::ostream& operator<<(std::ostream& os, const Vector4& v) {
     os << "(" << v.x << ", " << v.y << ", " << v.z << ", " << v.d << ")";
     return os;
@@ -176,20 +179,20 @@ Scene::Scene()
 
 Sphere::Sphere(Point4 c,float r) : centre(c),rayon(r) {}
 
+
 Point4 Sphere::intersect(const Ray& ray) const
 {
-    // Convention: pas d'intersection => on renvoie un "point" avec d=0
+    // SI pas d'intersection on renvoie un point avec d=0
     Point4 noHit(0.f, 0.f, 0.f);
     noHit.d = 0.f;
-
-    const Vector4 oc = ray.origin - centre;          // origin - center
+    //formule trouvée sur internet pour résoudre l'intersection sphère rayon en projectif
+    const Vector4 oc = ray.origin - centre;      
     const Vector4& dir = ray.direction;
 
     const float a = dir.dot3(dir);
     const float b = 2.0f * oc.dot3(dir);
     const float c = oc.dot3(oc) - rayon*rayon;
 
-    // Cas dégénéré: direction nulle
     const float eps = 1e-8f;
     if (std::abs(a) < eps) return noHit;
 
@@ -198,20 +201,18 @@ Point4 Sphere::intersect(const Ray& ray) const
 
     const float sqrtDisc = std::sqrt(disc);
 
-    // Deux solutions
-    const float t1 = (-b - sqrtDisc) / (2.0f * a);
+    
+    const float t1 = (-b - sqrtDisc) / (2.0f * a);// les deux solutions
     const float t2 = (-b + sqrtDisc) / (2.0f * a);
 
-    // Rayon => on garde le plus petit t >= 0
     float t = std::numeric_limits<float>::infinity();
     if (t1 >= 0.0f) t = t1;
     if (t2 >= 0.0f) t = std::min(t, t2);
     if (!std::isfinite(t)) return noHit;
 
     Point4 hit = ray.origin + (ray.direction * t);
-    // hit.d restera 1 via ton constructeur Point4 + Vector4 (car Vector4.d=0)
+    // hit.d restera 1 d'après le constructeur
     return hit;
-    //résoudre selon t : origine rayon + t*vecteur = point du cerlce (à r du centre )
 }
 
 Vector4 Sphere::normal(const Point4& p) const{
